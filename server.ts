@@ -1,11 +1,11 @@
 import express from 'express'
-import EventsDBManager from './database/db.events.manager'
+import eventRouter from './routers/event.router'
 
 const PORT = 3000
 const app = express()
-const db = new EventsDBManager()
 
-db.getEvents().then((res) => console.log(res))
+app.use(express.json())
+app.use('/events', eventRouter)
 
 app.listen(PORT, () => {
   console.log('Server listening on port', PORT, '...')
