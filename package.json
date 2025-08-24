@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.ts",
   "scripts": {
-    "dev": "tsx server.ts"
+    "dev": "tsx server.ts",
+    "test": "tsx tests/tests.ts"
   },
   "author": "",
   "license": "ISC",
@@ -11,10 +12,13 @@
   "dependencies": {
     "express": "^5.1.0",
     "sqlite3": "^5.1.7",
+    "ts-jest": "^29.4.1",
     "tsx": "^4.20.4"
   },
   "devDependencies": {
+    "@jest/globals": "^30.0.5",
     "@types/express": "^5.0.3",
-    "@types/sqlite3": "^3.1.11"
+    "@types/sqlite3": "^3.1.11",
+    "jest": "^30.0.5"
   }
 }

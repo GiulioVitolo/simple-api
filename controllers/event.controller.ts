@@ -1,25 +1,22 @@
 import { Request, Response, NextFunction } from "express";
 import EventsDBManager from "../database/db.events.manager";
+import { validateAndParse, setNotification } from "../utils/utils.db.events";
 
 const eventsDB = new EventsDBManager()
 
 export async function addEvent(req: Request, res: Response, next: NextFunction) {
   try {
     const {title, description, datetime} = req.body
-    const datetimeObj = new Date(datetime)
-    let isUrgent = false
+    
+    const sqlDatetime = validateAndParse(datetime)
 
     if (!title) throw Error('User must insert title')
 
-    if (datetimeObj.getTime() < new Date().getTime())
-      throw Error('Cannot add events that occur in the past')
+    const result = await eventsDB.addEvent(title, description, sqlDatetime)
 
-    const result = await eventsDB.addEvent(title, description, datetimeObj)
+    setNotification(title, datetime)
 
-    if (datetimeObj.getTime() - new Date().getTime() < 5*60*1000)
-      isUrgent = true
-
-    res.status(200).send({isUrgent, result})
+    res.status(200).send(result)
   } catch (err) {
     next(err)
   }

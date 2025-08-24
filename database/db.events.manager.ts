@@ -25,11 +25,11 @@ class EventsDBManager {
     })
   }
 
-  addEvent(title: string, description: string, datetime: Date) {
+  addEvent(title: string, description: string, datetime: string) {
     const query = 
     `
       INSERT INTO events (title, description, datetime) 
-      VALUES ('${title}', '${description}', '${datetime.toISOString().slice(0,19).replace('T', ' ')}')
+      VALUES ('${title}', '${description}', '${datetime}')
     `
 
     return new Promise((resolve, reject) => {
