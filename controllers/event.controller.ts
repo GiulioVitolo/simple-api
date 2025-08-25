@@ -11,6 +11,8 @@ export async function addEvent(req: Request, res: Response, next: NextFunction) 
     const sqlDatetime = validateAndParse(datetime)
 
     if (!title) throw Error('User must insert title')
+    if (!description) throw Error('User must insert description')
+    if (!datetime) throw Error('User must insert datetime')
 
     const result = await eventsDB.addEvent(title, description, sqlDatetime)
 

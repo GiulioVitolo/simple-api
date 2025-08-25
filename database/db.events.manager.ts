@@ -4,8 +4,8 @@ class EventsDBManager {
   
   db: Database
 
-  constructor() {
-    this.db = new Database('database/db.events')
+  constructor(dbPath: string = "database/db.events") {
+    this.db = new Database(dbPath);
   }
 
   createTable(){

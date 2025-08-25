@@ -9,15 +9,15 @@ export function validateAndParse(jsDate: string): string {
   return sqlDatetime
 }
 
-export function setNotification(title: string, jsDate: string) {
+export function setNotification(title: string, jsDate: string): number {
 
-  const delay = new Date(jsDate).getTime() - new Date().getTime() // ms
+  let delay = new Date(jsDate).getTime() - new Date().getTime() // ms
   if (delay > 5 * 60 * 1000) {
-    setTimeout(() => {
-      console.log(`The event '${title}' will start in 5 minutes`)
-    }, delay - (5 * 60 * 1000))
+    delay = delay - (5 * 60 * 1000)
   }
-  else {
-    console.log(`The event '${title}' will start in ${Math.round(delay/(1000 * 60))} minutes`)
-  }
+  setTimeout(() => {
+      console.log(`The event '${title}' will start in ${Math.round(delay/(1000 * 60))} minutes`)
+    }, delay)
+
+  return delay
 }
