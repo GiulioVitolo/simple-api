@@ -3,8 +3,6 @@ import EventsDBManager from '../database/db.events.manager'
 import { validateAndParse, setNotification } from '../utils/utils.db.events'
 import { addEvent, getEvent, getEvents } from '../controllers/event.controller';
 
-
-
 describe("event.controller: addEvent", () => {
   let req: any;
   let res: any;
@@ -170,7 +168,6 @@ describe('events.db utils functions', () => {
   });
 
   test("setNotification > 5 min ahead", () => {
-    // NOW is 00:00; event at 00:06 → delay should be 1 min
     expect(setNotification("Title", "2025-08-25T00:06:00")).toBe(60_000);
   });
 
