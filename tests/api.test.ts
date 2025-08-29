@@ -2,6 +2,7 @@ import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest, 
 import EventsDBManager from '../database/db.events.manager'
 import { validateAndParse, setNotification } from '../utils/utils.db.events'
 import { addEvent, getEvent, getEvents } from '../controllers/event.controller';
+import EventRepository from '../database/event.repository';
 
 describe("event.controller: addEvent", () => {
   let req: any;
@@ -24,7 +25,7 @@ describe("event.controller: addEvent", () => {
     res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
     next = jest.fn();
 
-    jest.spyOn(EventsDBManager.prototype, "addEvent").mockResolvedValue({});
+    jest.spyOn(EventRepository.prototype, "addEvent")
   });
 
   afterEach(() => {
@@ -95,21 +96,21 @@ describe("event.controller: getEvents", () => {
   });
 
   test("ok response if db has n >= 1 elements", async () => {
-    jest.spyOn(EventsDBManager.prototype, "getEvents").mockResolvedValue([{ id: 1 }]);
+    jest.spyOn(EventRepository.prototype, "getEvents").mockResolvedValue([{ eventId: 1, title: "T", description: "D", datetime: "2025-08-25 12:00:00" }]);
     await getEvents(req, res, next);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith([{ id: 1 }]);
+    expect(res.send).toHaveBeenCalledWith([{ eventId: 1, title: "T", description: "D", datetime: "2025-08-25 12:00:00" }]);
   });
 
   test("ok response if db has 0 elements", async () => {
-    jest.spyOn(EventsDBManager.prototype, "getEvents").mockResolvedValue([]);
+    jest.spyOn(EventRepository.prototype, "getEvents").mockResolvedValue([]);
     await getEvents(req, res, next);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith([]);
   });
 
   test("calls next(err) if getEvents throws error", async () => {
-    jest.spyOn(EventsDBManager.prototype, "getEvents").mockRejectedValue(new Error());
+    jest.spyOn(EventRepository.prototype, "getEvents").mockRejectedValue(new Error());
     await getEvents(req, res, next);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
@@ -131,15 +132,15 @@ describe("event.controller: getEvent", () => {
   });
 
   test("ok response if event is present in db", async () => {
-    jest.spyOn(EventsDBManager.prototype, "getEvent").mockResolvedValue({ eventId: 42 });
+    jest.spyOn(EventRepository.prototype, "getEvent").mockResolvedValue({ eventId: 42, title: "T", description: "D", datetime: "2025-08-25 12:00:00" });
     await getEvent(req, res, next);
-    expect(EventsDBManager.prototype.getEvent).toHaveBeenCalledWith(42);
+    expect(EventRepository.prototype.getEvent).toHaveBeenCalledWith(42);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({ eventId: 42 });
+    expect(res.send).toHaveBeenCalledWith({ eventId: 42, title: "T", description: "D", datetime: "2025-08-25 12:00:00" });
   });
 
   test("calls next(err) if getEvent fails", async () => {
-    jest.spyOn(EventsDBManager.prototype, "getEvent").mockRejectedValue(new Error());
+    jest.spyOn(EventRepository.prototype, "getEvent").mockRejectedValue(new Error());
     await getEvent(req, res, next);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
@@ -179,10 +180,12 @@ describe('events.db utils functions', () => {
 
 describe("EventsDBManager", () => {
   let dbm: EventsDBManager;
+  let eR: EventRepository;
 
   beforeAll(async () => {
-    dbm = new EventsDBManager(':memory:');           
-    await dbm.createTable();            
+    dbm = new EventsDBManager(":memory:"); // fast, isolated in-memory DB
+    await dbm.createTable();
+    eR = new EventRepository(dbm.getDb());
   });
 
   beforeEach(() => {
@@ -198,8 +201,8 @@ describe("EventsDBManager", () => {
   });
 
   test("addEvent and getEvents returns inserted row", async () => {
-    await dbm.addEvent("Title A", "Desc A", "2025-08-25 12:00:00");
-    const rows = (await dbm.getEvents()) as any[];
+    await eR.addEvent("Title A", "Desc A", "2025-08-25 12:00:00");
+    const rows = (await eR.getEvents()) as any[];
     expect(Array.isArray(rows)).toBe(true);
     expect(rows.length).toBe(1);
     expect(rows[0]).toMatchObject({
@@ -210,23 +213,23 @@ describe("EventsDBManager", () => {
   });
 
   test("getEvent returns the specific row by id", async () => {
-    await dbm.addEvent("T", "D", "2025-08-25 12:00:00");
-    const all = (await dbm.getEvents()) as any[];
+    await eR.addEvent("T", "D", "2025-08-25 12:00:00");
+    const all = (await eR.getEvents()) as any[];
     const id = all[0].eventId as number;
 
-    const row = (await dbm.getEvent(id)) as any;
+    const row = (await eR.getEvent(id)) as any;
     expect(row.eventId).toBe(id);
     expect(row.title).toBe("T");
   });
 
   test("getEvent rejects for missing id", async () => {
-    await expect(dbm.getEvent(9_999_999)).rejects.toBeNull();
+    await expect(eR.getEvent(9_999_999)).rejects.toBeNull();
   });
 
   test("multiple inserts and multiple gets", async () => {
-    await dbm.addEvent("A", "a", "2025-08-25 10:00:00");
-    await dbm.addEvent("B", "b", "2025-08-25 11:00:00");
-    const rows = (await dbm.getEvents()) as any[];
+    await eR.addEvent("A", "a", "2025-08-25 10:00:00");
+    await eR.addEvent("B", "b", "2025-08-25 11:00:00");
+    const rows = (await eR.getEvents()) as any[];
     expect(rows.map((r) => r.title)).toEqual(["A", "B"]);
   });
 });
